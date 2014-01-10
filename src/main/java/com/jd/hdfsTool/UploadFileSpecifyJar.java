@@ -9,14 +9,21 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-public class UploadFile {
+/**
+ * 指定jars的名称
+ * @author huanghu
+ *
+ */
+public class UploadFileSpecifyJar {
 	private String HOST_NAME = "hadoop-master.360buy.com";
 	private String FS_DEFAULT_NAME = String.format("hdfs://%s:8020/", HOST_NAME);
 	private String MAPRED_JOB_TRACKER = String.format("%s:8021", HOST_NAME);
+	private String jars = null;
 	
 	Configuration conf;
 	
-	public UploadFile(){
+	public UploadFileSpecifyJar(String jars){
+		this.jars = jars;
 		conf = new Configuration();
 		conf.set("fs.default.name", FS_DEFAULT_NAME);
 		conf.set("mapred.job.tracker", MAPRED_JOB_TRACKER);
@@ -34,15 +41,17 @@ public class UploadFile {
 	 * @param args
 	 */
 	public static void  main(String[] args){
-		UploadFile upload = new UploadFile();
+		String mainPath = args[0];
+		String subPath = args[1];
+		String path = args[2];
+		String jars = args[3];
+		
+		UploadFileSpecifyJar upload = new UploadFileSpecifyJar(jars);
 		Configuration conf = upload.getConf();
 		
 		try {
 			FileSystem fs = FileSystem.get(conf);
-			
-			String mainPath = args[0];
-			String subPath = args[1];
-			String path = args[2];
+
 			
 			Path p = new Path(path);
 			
@@ -157,15 +166,11 @@ public class UploadFile {
 		
 		Path libPath = new Path(String.format("%s\\lib", hdfsMainPath));
 		fs.mkdirs(libPath);
-
-		String appsName = "ebsdi-apps";
-		this.doUploadJar(fs, appsName ,localMainPath, libPath);
 		
-		String domainName = "ebsdi-domain";
-		this.doUploadJar(fs, domainName ,localMainPath, libPath);	
-		
-		String coreName = "ebsdi-core";
-		this.doUploadJar(fs, coreName ,localMainPath, libPath);	
+		String[] jarArray = jars.split(",");
+		for (String jar : jarArray) {
+			this.doUploadJar(fs, jar ,localMainPath, libPath);			
+		}
 	}
 	
 	/**
